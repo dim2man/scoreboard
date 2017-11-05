@@ -93,7 +93,7 @@ function start() {
 		if (cellIndex >= cells.length) {
 			row = scoresTable.insertRow();
 			cellIndex = 1;
-			turn.innerText = 'Ход:\u00a0' + scoresTable.rows.length;
+			turn.innerText = 'Ход:\u00a0' + (scoresTable.rows.length-1);
 		} else {
 			cellIndex++;
 		}
