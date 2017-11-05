@@ -7,10 +7,130 @@
 	<script type="text/javascript">
 	</script>
 	<style>
-		* {user-select: none;}
+		* {user-select: none; outline: none; margin: 0; padding: 0; box-sizing: border-box;}
+		body {width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: flex-start;}
+		table {table-layout: fixed; width: 100%;}
+		header, footer {flex-grow: 0; flex-shrink: 0;}
+		article {flex-grow: 0; flex-shrink: 1; overflow-x: hidden; overflow-y: auto;}
+		aside {display: flex; justify-content: space-between;}
+		input {width: 100%; font-size: 1.2em;}
+		button {padding: 5px 20px; font-size: 1.2em; border: none;}
+		.totals {font-size: 1.2em; background: yellow;}
+		.turn {font-size: 1.2em; margin: 5px 20px;}
 	</style>
 </head>
 <body>
-<h1>Таблица очков</h1>
+<header>
+	<table class="players"></table>
+</header>
+<article>
+	<table class="scores"></table>
+</article>
+<footer>
+	<table class="totals"></table>
+	<aside>
+		<button class="clear">Заново</button>
+		<div class="turn"></div>
+		<button class="start">Старт</button>
+	</aside>
+</footer>
+<script>
+
+const playersTable = document.querySelector('.players');
+const scoresTable = document.querySelector('.scores');
+const totalsTable = document.querySelector('.totals');
+const clearButton = document.querySelector('.clear');
+const startButton = document.querySelector('.start');
+const turn = document.querySelector('.turn');
+
+function addCell(row, placeholder, onEnter) {
+	const cell = row.insertCell();
+	const input = document.createElement('input');
+	input.type = 'text';
+	input.placeholder = placeholder;
+	cell.appendChild(input);
+	input.focus();
+	input.addEventListener('keypress', (e) => {
+		if (e.which === 13) {
+			onEnter();
+		}
+	});
+	return input;
+}
+
+function init() {
+	startButton.disabled = false;
+	turn.innerText = '';
+	while(playersTable.rows.length > 0) playersTable.deleteRow(0);
+	while(scoresTable.rows.length > 0) scoresTable.deleteRow(0);
+	while(totalsTable.rows.length > 0) totalsTable.deleteRow(0);
+
+	const row = playersTable.insertRow();
+
+	function addPlayer() {
+		addCell(row, 'Имя игрока', addPlayer);
+	}	
+	addPlayer();
+}
+
+function start() {
+	startButton.disabled = true;
+	const totalRow = totalsTable.insertRow();
+	const scoreRow = scoresTable.insertRow();
+
+	const cells = playersTable.rows[0].cells;
+	for(let i=0; i<cells.length; i++) {
+		const input = cells[i].querySelector('input');
+		input.readOnly = true;
+		totalRow.insertCell();
+		scoreRow.insertCell();
+	}
+
+	let cellIndex = cells.length;
+	let row, input;
+	function next() {
+		countAll(totalRow);
+		if (cellIndex >= cells.length) {
+			row = scoresTable.insertRow();
+			cellIndex = 1;
+			turn.innerText = 'Ход:\u00a0' + scoresTable.rows.length;
+		} else {
+			cellIndex++;
+		}
+		if (input) input.readOnly = true;
+		input = addCell(row, 'Сколько?', next);
+	}
+	next();
+}
+
+function countAll(totalRow) {
+	const columns = totalRow.cells.length;
+	const scores = [];
+	for(let i=0; i<columns; i++) scores[i] = 0;
+	for(let i = 0; i < scoresTable.rows.length; i++) {
+		const row = scoresTable.rows[i];
+		for(let j = 0; j < row.cells.length; j++) {
+			const cell = row.cells[j];
+			if (cell && cell.firstChild && cell.firstChild.value) {
+				const score = parseInt(cell.firstChild.value, 10);
+				if (isNaN(score)) {
+					scores[j] = 0;
+				} else {
+					scores[j] += score;
+				}
+			}
+		}
+	}
+	for(let i=0; i<columns; i++) {
+		totalRow.cells[i].innerText = scores[i];
+	}
+}
+
+clearButton.addEventListener('click', init);
+startButton.addEventListener('click', start);
+
+init();
+
+</script>
 </body>
 </html>
